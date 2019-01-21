@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t teemutt/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run teemutt/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t  teemutt/multi-client ./client
+  - docker build -t  teemutt/multi-nginx ./nginx
+  - docker build -t  teemutt/multi-server ./server
+  - docker build -t  teemutt/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push teemutt/multi-client
+  - docker push teemutt/multi-nginx
+  - docker push teemutt/multi-server
+  - docker push teemutt/multi-worker
